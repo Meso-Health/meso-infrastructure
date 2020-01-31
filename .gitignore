@@ -1,0 +1,8 @@
+# Ignore scrap files
+.DS_Store
+
+# Ignore local files
+docker-compose.yml
+
+# Ignore .env files
+.env

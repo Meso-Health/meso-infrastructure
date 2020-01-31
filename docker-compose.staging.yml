@@ -1,0 +1,86 @@
+version: '3'
+services:
+  app:
+    container_name: app
+    image: watsi/meso:staging
+    environment:
+      - MESO_DATABASE_PASSWORD=$MESO_DATABASE_PASSWORD
+      - ROLLBAR_ACCESS_TOKEN=$ROLLBAR_ACCESS_TOKEN
+      - ROLLBAR_ENV=staging
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - dragonfly-data:/app/public/dragonfly/docker
+  nginx:
+    container_name: nginx
+    image: nginx:1.15-alpine
+    restart: unless-stopped
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d
+      - ./config/certbot/conf:/etc/letsencrypt
+      - ./config/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  certbot:
+    container_name: certbot
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./config/certbot/conf:/etc/letsencrypt
+      - ./config/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  db:
+    container_name: db
+    image: postgres:9.6.9-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=meso
+      - POSTGRES_DB=meso
+      - POSTGRES_PASSWORD=$MESO_DATABASE_PASSWORD
+    volumes:
+      - db-data:/var/lib/postgresql
+    ports:
+      - "5432"
+  redis:
+    container_name: redis
+    image: redis:4.0.5-alpine
+    restart: unless-stopped
+    ports:
+      - "6379"
+    volumes:
+      - redis-data:/data
+  logspout:
+    container_name: logspout
+    image: gliderlabs/logspout
+    command: syslog+tls://$LOGDNA_SYSLOG_ADDRESS
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - SYSLOG_HOSTNAME=Meso-Staging
+  ouroboros:
+    container_name: ouroboros
+    hostname: ouroboros
+    image: pyouroboros/ouroboros
+    environment:
+      - CLEANUP=true
+      - INTERVAL=30
+      - LOG_LEVEL=debug
+      - SELF_UPDATE=true
+      - TZ=America/Los_Angeles
+      - REPO_USER=$DOCKER_USERNAME
+      - REPO_PASS=$DOCKER_PASSWORD
+      - NOTIFIERS=$SLACK_WEBHOOK_URL
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+volumes:
+  redis-data:
+  db-data:
+  nginx-logs:
+  dragonfly-data:
