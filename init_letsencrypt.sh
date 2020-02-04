@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # This file is taken from https://github.com/wmnnd/nginx-certbot
-domains=(api-staging.uhp.org)
+domains=(example.com) # update this with the domain you want to register the certificate for
 rsa_key_size=4096
 data_path="./config/certbot"
-email="dev@watsi.org" # Adding a valid address is strongly recommended
+email="_EMAIL_ADDRESS_" # Adding a valid address is strongly recommended
 staging=0 # Set to 1 if you're testing your setup to avoid hitting request limits
 
 if [ -d "$data_path" ]; then

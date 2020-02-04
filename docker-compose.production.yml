@@ -1,18 +1,16 @@
 version: '3'
 services:
   app:
-    image: watsi/meso:v0.10.4
+    image: mesohealth/backend:v1.0.0
     restart: always
     environment:
       - MESO_DATABASE_PASSWORD=$MESO_DATABASE_PASSWORD
       - ROLLBAR_ACCESS_TOKEN=$ROLLBAR_ACCESS_TOKEN
       - ROLLBAR_ENV=production
-      - REDIS_URL=redis://redis:6379/0
     ports:
       - "3000:3000"
     depends_on:
       - db
-      - redis
     volumes:
       - dragonfly-data:/app/public/dragonfly/docker
   db:
@@ -26,21 +24,6 @@ services:
       - db-data:/var/lib/postgresql
     ports:
       - "5432:5432"
-  redis:
-    image: redis:4.0.5-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    depends_on:
-      - redis-overcommit
-  redis-overcommit:
-    build: https://github.com/bkuhl/redis-overcommit-on-host.git
-    restart: 'no'
-    privileged: true
-    volumes:
-      - /proc/sys/vm:/mnt/vm
   metabase:
     image: metabase/metabase
     restart: always
@@ -51,7 +34,6 @@ services:
     volumes:
       - metabase-data:/metabase-data
 volumes:
-  redis-data:
   db-data:
   dragonfly-data:
   metabase-data:

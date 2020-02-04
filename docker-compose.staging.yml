@@ -2,17 +2,15 @@ version: '3'
 services:
   app:
     container_name: app
-    image: watsi/meso:staging
+    image: mesohealth/backend:v1.0.0
     environment:
       - MESO_DATABASE_PASSWORD=$MESO_DATABASE_PASSWORD
       - ROLLBAR_ACCESS_TOKEN=$ROLLBAR_ACCESS_TOKEN
       - ROLLBAR_ENV=staging
-      - REDIS_URL=redis://redis:6379/0
     ports:
       - "3000:3000"
     depends_on:
       - db
-      - redis
     volumes:
       - dragonfly-data:/app/public/dragonfly/docker
   nginx:
@@ -47,14 +45,6 @@ services:
       - db-data:/var/lib/postgresql
     ports:
       - "5432"
-  redis:
-    container_name: redis
-    image: redis:4.0.5-alpine
-    restart: unless-stopped
-    ports:
-      - "6379"
-    volumes:
-      - redis-data:/data
   logspout:
     container_name: logspout
     image: gliderlabs/logspout
@@ -80,7 +70,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 volumes:
-  redis-data:
   db-data:
   nginx-logs:
   dragonfly-data:
